@@ -16,6 +16,11 @@ def process_and_move_data():
         for cls in CLASSES:
             (RAW_DATA_DIR / cls).mkdir(parents=True, exist_ok=True)
         return
+    if not TARGET_DATA_DIR.exists():
+        print(f"Folder {TARGET_DATA_DIR} does not exist. Creating one...")
+        for cls in CLASSES:
+            (TARGET_DATA_DIR / cls).mkdir(parents=True, exist_ok=True)
+        return
 
     for class_name in CLASSES:
         class_dir = RAW_DATA_DIR / class_name
