@@ -28,6 +28,7 @@ def train_model():
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
     
     best_val_acc = 0.0
+    best_val_loss = 10.0
 
     print("Начинаем обучение...")
     for epoch in range(EPOCHS):
@@ -80,8 +81,9 @@ def train_model():
               f"Val Loss: {epoch_val_loss:.4f} Acc: {epoch_val_acc:.4f}")
 
 
-        if epoch_val_acc > best_val_acc:
+        if epoch_val_acc >= best_val_acc and epoch_val_loss <= best_val_loss:
             best_val_acc = epoch_val_acc
+            best_val_loss = epoch_val_loss
             torch.save(model.state_dict(), MODEL_SAVE_PATH)
             print(f" -> Сохранена новая лучшая модель!")
 
