@@ -74,29 +74,47 @@ def run_inference():
                 
                 pred_class = CLASSES[predicted_idx.item()]
                 conf_value = round(confidence.item(), 4)
+                if conf_value < 0.65:
+                    show_class=pred_class + " [MANUAL_REVIEW]"
+                else: show_class=pred_class
 
                 # Сохраняем в массив для JSON
                 results_data.append({
                     "file_name": img_path.name,
                     "true_class": class_name,
-                    "predicted_class": pred_class,
+                    "predicted_class": show_class,
                     "confidence": conf_value
                 })
 
-                # 4. Отрисовка результатов через OpenCV
-                text = f"{pred_class}: {conf_value:.2f}"
+                text = f"{show_class}: {conf_value:.2f}"
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 font_scale = 0.8
                 thickness = 2
                 color = COLORS[pred_class]
 
-                # Рисуем черную плашку под текст для контрастности
+                # Узнаем ширину исходной картинки
+                img_height, img_width = img_bgr.shape[:2]
+                
+                # Черновой расчет размеров текста
                 (text_width, text_height), baseline = cv2.getTextSize(text, font, font_scale, thickness)
+                
+                # Максимально допустимая ширина текста (ширина фото минус 10px отступа с каждой стороны)
+                max_text_width = img_width - 20
+                
+                # Если текст не влезает — пропорционально сжимаем шрифт
+                if text_width > max_text_width:
+                    font_scale = font_scale * (max_text_width / text_width)
+                    # Если шрифт стал слишком мелким, убавляем толщину линий, чтобы текст не слипся в пятно
+                    if font_scale < 0.5:
+                        thickness = 1
+                    # Чистовой перерасчет размеров с новым шрифтом
+                    (text_width, text_height), baseline = cv2.getTextSize(text, font, font_scale, thickness)
+
+                # Рисуем плашку (она теперь всегда гарантированно поместится в кадр)
                 cv2.rectangle(img_bgr, (10, 10), (10 + text_width, 10 + text_height + baseline), (0, 0, 0), cv2.FILLED)
                 
-                # Пишем текст
+                # Наносим текст
                 cv2.putText(img_bgr, text, (10, 10 + text_height), font, font_scale, color, thickness)
-
                 # 5. Сохраняем картинку с подписью
                 save_path = RESULTS_DIR / f"demo_{img_path.name}"
                 cv2.imwrite(str(save_path), img_bgr)
